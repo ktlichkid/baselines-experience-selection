@@ -180,6 +180,7 @@ class DDPG(object):
         logger.info('setting up critic optimizer')
         normalized_critic_target_tf = tf.clip_by_value(normalize(self.critic_target, self.ret_rms), self.return_range[0], self.return_range[1])
         self.critic_loss = tf.reduce_mean(tf.square(self.normalized_critic_tf - normalized_critic_target_tf))
+        self.tde = tf.abs(self.normalized_critic_tf - normalized_critic_target_tf)
         if self.critic_l2_reg > 0.:
             critic_reg_vars = [var for var in self.critic.trainable_vars if 'kernel' in var.name and 'output' not in var.name]
             for var in critic_reg_vars:
@@ -253,15 +254,19 @@ class DDPG(object):
         self.stats_names = names
 
     def pi(self, obs, apply_noise=True, compute_Q=True):
+        """ experience selection change: calculate the deviation of the applied action (after
+        clipping) with the policy action."""
         if self.param_noise is not None and apply_noise:
             actor_tf = self.perturbed_actor_tf
         else:
             actor_tf = self.actor_tf
+        actor_policy = self.actor_tf
         feed_dict = {self.obs0: [obs]}
         if compute_Q:
-            action, q = self.sess.run([actor_tf, self.critic_with_actor_tf], feed_dict=feed_dict)
+            policy_action, action, q = self.sess.run([actor_policy, actor_tf, self.critic_with_actor_tf],
+                                                        feed_dict=feed_dict)
         else:
-            action = self.sess.run(actor_tf, feed_dict=feed_dict)
+            policy_action, action = self.sess.run([actor_policy, actor_tf], feed_dict=feed_dict)
             q = None
         action = action.flatten()
         if self.action_noise is not None and apply_noise:
@@ -269,18 +274,18 @@ class DDPG(object):
             assert noise.shape == action.shape
             action += noise
         action = np.clip(action, self.action_range[0], self.action_range[1])
-        return action, q
+        exploration_magnitude = np.linalg.norm(action-policy_action, ord=1)
+        return action, q, exploration_magnitude
 
-    def store_transition(self, obs0, action, reward, obs1, terminal1):
+    def store_transition(self, obs0, action, reward, obs1, terminal1, **kwargs):
         reward *= self.reward_scale
-        self.memory.append(obs0, action, reward, obs1, terminal1)
+        self.memory.append(obs0, action, reward, obs1, terminal1, kwargs)
         if self.normalize_observations:
             self.obs_rms.update(np.array([obs0]))
 
     def train(self):
         # Get a batch.
         batch = self.memory.sample(batch_size=self.batch_size)
-
         if self.normalize_returns and self.enable_popart:
             old_mean, old_std, target_Q = self.sess.run([self.ret_rms.mean, self.ret_rms.std, self.target_Q], feed_dict={
                 self.obs1: batch['obs1'],
@@ -310,12 +315,15 @@ class DDPG(object):
             })
 
         # Get all gradients and perform a synced update.
-        ops = [self.actor_grads, self.actor_loss, self.critic_grads, self.critic_loss]
-        actor_grads, actor_loss, critic_grads, critic_loss = self.sess.run(ops, feed_dict={
+        ops = [self.actor_grads, self.actor_loss, self.critic_grads, self.critic_loss, self.tde]
+        actor_grads, actor_loss, critic_grads, critic_loss, tde = self.sess.run(ops, feed_dict={
             self.obs0: batch['obs0'],
             self.actions: batch['actions'],
             self.critic_target: target_Q,
         })
+        self.memory.experience_selection_buffer.update_experience_meta_data(
+            batch['indices'],
+            {'tde': tde})
         self.actor_optimizer.update(actor_grads, stepsize=self.actor_lr)
         self.critic_optimizer.update(critic_grads, stepsize=self.critic_lr)
 
