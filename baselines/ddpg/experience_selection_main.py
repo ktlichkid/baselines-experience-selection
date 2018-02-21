@@ -1,6 +1,10 @@
 import argparse
 import time
+import json
 import os
+
+from tensorflow.python.framework.errors_impl import NotFoundError
+
 from baselines import logger, bench
 from baselines.common.misc_util import (
     set_global_seeds,
@@ -59,11 +63,19 @@ def run(env_id, seed, noise_type, layer_norm, evaluation, **kwargs):
     # Configure components.
     #memory = Memory(limit=int(1e6), action_shape=env.action_space.shape,
     memory = ESMemoryAdapter(
-        limit=int(1e6),
+        limit=int(kwargs['buffer_size']),
         action_shape=env.action_space.shape,
         observation_shape=env.observation_space.shape,
-        forgetting_factor=kwargs['gamma']
+        forgetting_factor=kwargs['gamma'],
+        overwrite_policy=kwargs['buffer_overwrite'],
+        sample_policy=kwargs['buffer_sample'],
+        batch_size=kwargs['batch_size']
     )
+    del kwargs['buffer_size']
+    del kwargs['buffer_overwrite']
+    del kwargs['buffer_sample']
+
+
     # observation_shape=env.observation_space.shape)
     critic = Critic(layer_norm=layer_norm)
     actor = Actor(nb_actions, layer_norm=layer_norm)
@@ -92,7 +104,7 @@ def run(env_id, seed, noise_type, layer_norm, evaluation, **kwargs):
 def parse_args():
     parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
 
-    parser.add_argument('--env-id', type=str, default='RoboschoolInvertedPendulum-v1')
+    parser.add_argument('--env-id', type=str, default='RoboschoolHalfCheetah-v1')
     boolean_flag(parser, 'render-eval', default=False)
     boolean_flag(parser, 'layer-norm', default=True)
     boolean_flag(parser, 'render', default=False)
@@ -114,7 +126,20 @@ def parse_args():
     parser.add_argument('--nb-rollout-steps', type=int, default=100)  # per epoch cycle and MPI worker
     parser.add_argument('--noise-type', type=str, default='adaptive-param_0.2')  # choices are adaptive-param_xx, ou_xx, normal_xx, none
     parser.add_argument('--num-timesteps', type=int, default=None)
+    parser.add_argument('--project_dir', type=str, default='test')
+    parser.add_argument('--experiment_name', type=str, default='default') # results are saved in
+    # /data/<project-dir>/<env-id>/<experiment-name>/<iteration>/
     boolean_flag(parser, 'evaluation', default=False)
+
+    # experience slection settings ====================================
+    parser.add_argument('--buffer_size', type=int, default=1e4)  # 'FIFO', 'expl_xx' (
+    parser.add_argument('--buffer_overwrite', type=str, default='expl_1.2') # 'FIFO', 'expl_xx' (
+    # stochastic exploration magnitude based with alpha = xx), tde_xx (stochastic TDE based with alpha = xx), 'resv' (Reservoir sampling)
+    parser.add_argument('--buffer_sample', type=str, default='PER_0.7')
+    #'uniform', 'PER_xx (TDE rank based with alpha = xx)
+
+
+
     args = parser.parse_args()
     # we don't directly specify timesteps for this script, so make sure that if we do specify them
     # they agree with the other parameters
@@ -124,10 +149,34 @@ def parse_args():
     del dict_args['num_timesteps']
     return dict_args
 
+def determine_logdir(args):
+    base = './results/{:s}/{:s}/{:s}'.format(args['project_dir'], args['env_id'],
+                                             args['experiment_name'])
+    try:
+        previous_results = len(tf.gfile.Glob('{:s}/run_*'.format(base)))
+        idx = previous_results
+    except NotFoundError:
+        idx = 0
+    fulldir = '{:s}/run_{:03d}'.format(base, idx)
+    tf.gfile.MakeDirs(fulldir)
+    settings_file_name = '{:s}/experiment_definition.json'.format(base)
+    try:
+        with open(settings_file_name, mode='r') as f:
+            prev_set = json.load(f)
+            assert prev_set == args, 'attempting to perform experiments with different settings ' \
+                                     'in an already written to experiment folder'
+    except (json.decoder.JSONDecodeError, FileNotFoundError):
+        with open(settings_file_name, mode='w') as f:
+            json.dump(fp=f, obj=args, indent=4)
+
+    del args['project_dir']
+    del args['experiment_name']
+    return fulldir
 
 if __name__ == '__main__':
     args = parse_args()
     if MPI.COMM_WORLD.Get_rank() == 0:
-        logger.configure()
+        dir = determine_logdir(args)
+        logger.configure(dir=dir)
     # Run actual script.
     run(**args)

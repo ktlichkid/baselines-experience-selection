@@ -14,7 +14,7 @@ class ESMemoryAdapter(object):
     sample options: 'uniform','PER_xx (TDE rank based with alpha = xx)
     """
     def __init__(self, limit, action_shape, observation_shape, overwrite_policy='FIFO',
-                 sample_policy='uniform', forgetting_factor=0.99):
+                 sample_policy='uniform', batch_size=64, forgetting_factor=0.99):
 
         ow = overwrite_policy.lower().strip()
         if 'fifo' in ow:
@@ -41,7 +41,7 @@ class ESMemoryAdapter(object):
         sa = sample_policy.lower().strip()
         if 'uniform' in sa:
             sa_tab = {'type': 'uniform'}
-        elif 'PER' in sa:
+        elif 'per' in sa:
             _, alpha = ow.split('_')
             sa_tab = {'type': 'rank based stochastic',
                         'metric': 'tde',
@@ -54,7 +54,8 @@ class ESMemoryAdapter(object):
         settings = {
             'buffer_size': limit,
             'forgetting_factor': forgetting_factor,
-            'reuse': 8, # not used in the baselines version
+            'batch_size': batch_size,
+            'reuse': 32, # not used in the baselines version
             'experience_properties': {
                 'observations': {
                     'state': {
