@@ -1,0 +1,2 @@
+#!/bin/bash
+docker run --runtime=nvidia -it --rm -v /home/dlforce/.tfdata/logs/:/logdir/ -e "RESULTS_BASE_DIR=/logdir/" -e "PYTHONPATH=/baselines-experience-selection" experience-selection:gpu
