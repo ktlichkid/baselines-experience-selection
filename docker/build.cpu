@@ -1,0 +1,3 @@
+#!/bin/bash
+
+docker build -t experience-selection:cpu -f Dockerfile.cpu .
