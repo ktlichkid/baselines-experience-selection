@@ -82,7 +82,10 @@ def run(env_id, seed, noise_type, layer_norm, evaluation, **kwargs):
     actor = Actor(nb_actions, layer_norm=layer_norm)
 
     # Seed everything to make things reproducible.
-    seed = seed + 1000000 * rank
+    trial = int(logger.get_dir()[-3:])
+
+    seed = seed + 1000000 * rank + 10000 * trial
+
     logger.info('rank {}: seed={}, logdir={}'.format(rank, seed, logger.get_dir()))
     tf.reset_default_graph()
     set_global_seeds(seed)
