@@ -34,7 +34,8 @@ if __name__ == '__main__':
     }
 
     for env in environments:
-        for db_sze, db_sze_str in zip([1e6, 2e5, 4e4], ['1m', '200k', '40k']):
+        for db_sze, db_sze_str in zip([1e6, 5e5, 2e5, 1e5, 4e4], ['1m', '500k','200k',
+                                                                  '100k', '40k']):
             for ows in ['FIFO', 'expl_1.2', 'tde_1.2', 'resv']:
                 if ows == 'FIFO' or db_sze < 1e6:
                     setting = base_settings.copy()
