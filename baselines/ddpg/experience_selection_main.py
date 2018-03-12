@@ -138,6 +138,8 @@ def parse_args():
     parser.add_argument('--buffer_size', type=float, default=1e6)  # 'FIFO', 'expl_xx' (
     parser.add_argument('--noise-type', type=str,
                         default='adaptive-param_0.2')  # choices are adaptive-param_xx, ou_xx, normal_xx, none
+    parser.add_argument('--initial_exploration', type=float, default=0.2)
+    parser.add_argument('--final_exploration', type=float, default=0.2)
     parser.add_argument('--buffer_overwrite', type=str, default='FIFO') # 'FIFO', 'expl_xx' (
     # stochastic exploration magnitude based with alpha = xx), tde_xx (stochastic TDE based with alpha = xx), 'resv' (Reservoir sampling)
     parser.add_argument('--buffer_sample', type=str, default='uniform')

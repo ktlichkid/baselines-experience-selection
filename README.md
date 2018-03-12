@@ -1,3 +1,21 @@
+# Experience selection Baselines
+
+This repository contains code used for the experiments reported in section 8.5 of _Experience 
+Selection in 
+Deep Reinforcement 
+Learning for Control_. The code is forked from the openAI baselines repository, the readme of 
+which is given below. 
+The changes are limited to the DDPG algorithm and include:  
+- Added experience replay code that allows experience retention based on TDE, exploration or 
+reservoir sampling in addition to FIFO.
+- Added the option for exploration decay when using parameter noise
+- Added helper functions to perform the experiments reported in the paper.
+- Changed from the mujoco based continuous control benchmarks to the open source Roboschool 
+alternatives.
+   
+
+
+
 <img src="data/logo.jpg" width=25% align="right" />
 
 # Baselines

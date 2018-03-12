@@ -15,7 +15,8 @@ from mpi4py import MPI
 def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, param_noise, actor, critic,
     normalize_returns, normalize_observations, critic_l2_reg, actor_lr, critic_lr, action_noise,
     popart, gamma, clip_norm, nb_train_steps, nb_rollout_steps, nb_eval_steps, batch_size, memory,
-    tau=0.01, eval_env=None, param_noise_adaption_interval=50):
+    tau=0.01, eval_env=None, param_noise_adaption_interval=50, initial_exploration=0.2,
+          final_exploration=0.2):
     rank = MPI.COMM_WORLD.Get_rank()
 
     assert (np.abs(env.action_space.low) == env.action_space.high).all()  # we assume symmetric actions.
@@ -66,6 +67,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
         epoch_qs = []
         epoch_episodes = 0
         for epoch in range(nb_epochs):
+            progress = epoch / nb_epochs
             for cycle in range(nb_epoch_cycles):
                 # Perform rollouts.
                 for t_rollout in range(nb_rollout_steps):
@@ -111,6 +113,9 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                 for t_train in range(nb_train_steps):
                     # Adapt param noise, if necessary.
                     if memory.nb_entries >= batch_size and t % param_noise_adaption_interval == 0:
+                        desired_exploration = ((1-progress) * initial_exploration + progress *
+                                               final_exploration)
+                        param_noise.set_new_stddev_target(desired_exploration)
                         distance = agent.adapt_param_noise()
                         epoch_adaptive_distances.append(distance)
 

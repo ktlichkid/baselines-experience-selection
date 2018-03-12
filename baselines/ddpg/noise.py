@@ -23,6 +23,10 @@ class AdaptiveParamNoiseSpec(object):
         }
         return stats
 
+    def set_new_stddev_target(self, stddev_target):
+        self.desired_action_stddev = stddev_target
+
+
     def __repr__(self):
         fmt = 'AdaptiveParamNoiseSpec(initial_stddev={}, desired_action_stddev={}, adoption_coefficient={})'
         return fmt.format(self.initial_stddev, self.desired_action_stddev, self.adoption_coefficient)
