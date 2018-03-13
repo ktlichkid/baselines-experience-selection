@@ -72,7 +72,7 @@ if __name__ == '__main__':
             for ows in ['FIFO', 'expl_1.2', 'tde_1.2', 'resv', 'FULL']:
                 setting = base_settings.copy()
                 setting['env-id'] = env
-                setting['buffer_overwrite'] = ows
+                setting['buffer_overwrite'] = 'FIFO' if ows == 'FULL' else ows
                 setting['final_exploration'] = 0.02
                 if ows == 'FULL':
                     setting['buffer_size'] = 1e6
