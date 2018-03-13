@@ -41,8 +41,9 @@ if __name__ == '__main__':
     for arg in args:
         environments.append(possible_env_arguments[arg])
     if len(environments) == 0:
-        environments = ['RoboschoolInvertedDoublePendulum-v1',
-                        'RoboschoolReacher-v1',
+        environments = ['RoboschoolReacher-v1',
+                        'RoboschoolAnt-v1',
+                        'RoboschoolWalker2d-v1',
                         'RoboschoolHopper-v1',
                         'RoboschoolHalfCheetah-v1',
                         ]
@@ -81,9 +82,6 @@ if __name__ == '__main__':
                     db_sze_str = decay_settings['db_sze_str']
                 setting['experiment_name'] = 'DECAY_{:s}_{:s}'.format(db_sze_str, ows)
                 experiments.append(setting)
-
-
-
 
     with open('../../experiments_to_run.json', mode='w') as f:
         json.dump(experiments,f,indent=4)

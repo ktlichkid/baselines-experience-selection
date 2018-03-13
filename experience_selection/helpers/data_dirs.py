@@ -51,9 +51,17 @@ def record_settings_and_assert_correct(experiment_def):
     try:
         with open(settings_file_name, mode='r') as f:
             prev_set = json.load(f)
-            assert prev_set == experiment_def, 'attempting to perform experiments with different ' \
-                                               'settings ' \
-                                               'in an already written to experiment folder'
+            if not prev_set == experiment_def:
+                for setting_name in prev_set:
+                    if not prev_set[setting_name] == experiment_def[setting_name]:
+                        print('Settings do not match with previously performed experiments with '
+                              'the same name:')
+                        print('previous setting:')
+                        print(prev_set[setting_name])
+                        print('current setting:')
+                        print(experiment_def[setting_name])
+                        raise ValueError('Settings mismatch')
+
     except (json.decoder.JSONDecodeError, FileNotFoundError):
         with open(settings_file_name, mode='w') as f:
             json.dump(fp=f, obj=experiment_def, indent=4)
