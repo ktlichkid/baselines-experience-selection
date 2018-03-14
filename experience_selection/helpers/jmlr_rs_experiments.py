@@ -13,18 +13,6 @@ possible_env_arguments = {
 }
 
 decay_experiments = {
-    'RoboschoolReacher-v1': {
-        'db_sze': 3e4,
-        'db_sze_str': '30k',
-    },
-    'RoboschoolWalker2d-v1': {
-        'db_sze': 2e5,
-        'db_sze_str': '200k',
-    },
-    'RoboschoolHalfCheetah-v1': {
-        'db_sze': 2e5,
-        'db_sze_str': '200k',
-    }
 }
 
 buffer_sizes = {
