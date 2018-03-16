@@ -39,10 +39,12 @@ def completed_experiments(experiment_def):
 
 def next_save_dir(exeriment_def):
     idx = completed_experiments(exeriment_def)
-    save_dir = '{:s}/run_{:03d}'.format(
-        full_experiment_dir(exeriment_def), idx)
-    tf.gfile.MakeDirs(save_dir)
-    return save_dir
+    for i in range(idx+1):
+        save_dir = '{:s}/run_{:03d}'.format(
+            full_experiment_dir(exeriment_def), i)
+        if not tf.gfile.Exists(save_dir):
+            tf.gfile.MakeDirs(save_dir)
+            return save_dir
 
 
 def record_settings_and_assert_correct(experiment_def):
