@@ -20,8 +20,8 @@ buffer_sizes = {
                              ['1m', '200k', '100k', '40k', '28k', '20k', '10k']),
     'RoboschoolWalker2d-v1': ([1e6, 5e5, 2e5, 1.64e5, 1e5, 4e4],
                               ['1m', '500k','200k','164k', '100k', '40k']),
-    'RoboschoolHalfCheetah-v1': ([1e6, 5e5, 2.64e5, 2e5, 1.64e5, 1e5, 4e4],
-                              ['1m', '500k', '264k', '200k','164k', '100k', '40k']),
+    'RoboschoolHalfCheetah-v1': ([1e6, 5e5, 2.64e5, 2e5,  1e5, 4e4],
+                              ['1m', '500k', '264k', '200k', '100k', '40k']),
 
 }
 
