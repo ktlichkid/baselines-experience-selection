@@ -16,6 +16,8 @@ decay_experiments = {
 }
 
 buffer_sizes = {
+    'RoboschoolInvertedDoublePendulum-v1': ([1e6, 5e5, 3.18e5, 2e5, 1e5, 4e4],
+                                               ['1m', '500k', '318k', '200k', '100k', '40k']),
     'RoboschoolReacher-v1': ([1e6, 2e5, 1e5, 4e4, 2.8e4, 2e4,  1e4],
                              ['1m', '200k', '100k', '40k', '28k', '20k', '10k']),
     'RoboschoolWalker2d-v1': ([1e6, 5e5, 2e5, 1.64e5, 1e5, 4e4],
