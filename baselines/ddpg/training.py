@@ -114,6 +114,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                         epoch_adaptive_distances.append(distance)
 
                     cl, al = agent.train()
+
                     epoch_critic_losses.append(cl)
                     epoch_actor_losses.append(al)
                     agent.update_target_net()
@@ -136,6 +137,9 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                             eval_episode_rewards.append(eval_episode_reward)
                             eval_episode_rewards_history.append(eval_episode_reward)
                             eval_episode_reward = 0.
+                            if len(eval_episode_rewards) == 5:
+                                break
+
 
             mpi_size = MPI.COMM_WORLD.Get_size()
             # Log stats.
@@ -158,9 +162,9 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
             combined_stats['rollout/actions_std'] = np.std(epoch_actions)
             # Evaluation statistics.
             if eval_env is not None:
-                combined_stats['eval/return'] = eval_episode_rewards
+                combined_stats['eval/return'] = np.mean(eval_episode_rewards)
                 combined_stats['eval/return_history'] = np.mean(eval_episode_rewards_history)
-                combined_stats['eval/Q'] = eval_qs
+                # combined_stats['eval/Q'] = eval_qs
                 combined_stats['eval/episodes'] = len(eval_episode_rewards)
             def as_scalar(x):
                 if isinstance(x, np.ndarray):
@@ -177,6 +181,9 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
             combined_stats['total/epochs'] = epoch + 1
             combined_stats['total/steps'] = t
 
+            with open("eval.dat", 'a+') as f:
+                f.write(str(combined_stats['total/steps']) + ' ' + str(combined_stats['eval/return']) + '\n')
+
             for key in sorted(combined_stats.keys()):
                 logger.record_tabular(key, combined_stats[key])
             logger.dump_tabular()
@@ -189,4 +196,3 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                 if eval_env and hasattr(eval_env, 'get_state'):
                     with open(os.path.join(logdir, 'eval_env_state.pkl'), 'wb') as f:
                         pickle.dump(eval_env.get_state(), f)
-
