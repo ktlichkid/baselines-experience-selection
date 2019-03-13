@@ -122,8 +122,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                 # Evaluate.
                 eval_episode_rewards = []
                 eval_qs = []
-                if eval_env is not None:
-                    print("eval")
+                if eval_env is not None and cycle == nb_epoch_cycles - 1:
                     eval_episode_reward = 0.
                     for t_rollout in range(nb_eval_steps):
                         eval_action, eval_q = agent.pi(eval_obs, apply_noise=False, compute_Q=True)
@@ -182,9 +181,9 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
             combined_stats['total/epochs'] = epoch + 1
             combined_stats['total/steps'] = t
 
-            print("record eval")
-            with open("eval.dat", 'a+') as f:
-                f.write(str(combined_stats['total/steps']) + ' ' + str(combined_stats['eval/return']) + '\n')
+            if t % 10000 == 0:
+                with open("eval.dat", 'a+') as f:
+                    f.write(str(combined_stats['total/steps']) + ' ' + str(combined_stats['eval/return']) + '\n')
 
             for key in sorted(combined_stats.keys()):
                 logger.record_tabular(key, combined_stats[key])
