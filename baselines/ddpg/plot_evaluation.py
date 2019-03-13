@@ -6,11 +6,11 @@ filename = "eval.dat"
 
 figures = np.array(pd.read_csv(filepath_or_buffer=filename, sep=" ", header=None))
 
-print(figures[44:544].T[0])
+print(figures[0:500].T[0])
 
-figures_x = figures[44:544].T[0]
-figures_y = figures[44:544].T[1]
-figures_y_2 = figures[544:1044].T[1]
+figures_x = figures[0:500].T[0]
+figures_y = figures[0:500].T[1]
+figures_y_2 = figures[500:1000].T[1]
 avg = (figures_y + figures_y_2) / 2
 
 # avg = np.mean(figures, axis=0)[1]

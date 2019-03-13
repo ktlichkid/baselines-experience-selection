@@ -123,6 +123,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                 eval_episode_rewards = []
                 eval_qs = []
                 if eval_env is not None:
+                    print("eval")
                     eval_episode_reward = 0.
                     for t_rollout in range(nb_eval_steps):
                         eval_action, eval_q = agent.pi(eval_obs, apply_noise=False, compute_Q=True)
@@ -137,7 +138,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                             eval_episode_rewards.append(eval_episode_reward)
                             eval_episode_rewards_history.append(eval_episode_reward)
                             eval_episode_reward = 0.
-                            if len(eval_episode_rewards) == 5:
+                            if len(eval_episode_rewards) == 20:
                                 break
 
 
@@ -181,6 +182,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
             combined_stats['total/epochs'] = epoch + 1
             combined_stats['total/steps'] = t
 
+            print("record eval")
             with open("eval.dat", 'a+') as f:
                 f.write(str(combined_stats['total/steps']) + ' ' + str(combined_stats['eval/return']) + '\n')
 
