@@ -122,7 +122,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
                 # Evaluate.
                 eval_episode_rewards = []
                 eval_qs = []
-                if eval_env is not None and cycle == nb_epoch_cycles - 1:
+                if eval_env is not None and t % 10000 == 0:
                     eval_episode_reward = 0.
                     for t_rollout in range(nb_eval_steps):
                         eval_action, eval_q = agent.pi(eval_obs, apply_noise=False, compute_Q=True)
@@ -161,7 +161,7 @@ def train(env, nb_epochs, nb_epoch_cycles, render_eval, reward_scale, render, pa
             combined_stats['rollout/episodes'] = epoch_episodes
             combined_stats['rollout/actions_std'] = np.std(epoch_actions)
             # Evaluation statistics.
-            if eval_env is not None:
+            if eval_env is not None and t % 10000 == 0:
                 combined_stats['eval/return'] = np.mean(eval_episode_rewards)
                 combined_stats['eval/return_history'] = np.mean(eval_episode_rewards_history)
                 # combined_stats['eval/Q'] = eval_qs
